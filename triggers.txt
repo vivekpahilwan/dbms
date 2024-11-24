@@ -1,0 +1,211 @@
+
+ASSIGNMENT NO:6
+
+AIM: 
+Write a Database Trigger.
+------------------------------------------------------------
+
+DATABASE:
+
+create database trigger3;
+
+USE TRIGGER:
+
+use trigger3;
+
+TABLES:
+
+1> DEPARTMENT:
+
+mysql> SELECT * FROM dept1;
+-> #
++-----+------------+------------+
+| did | d_name     | d_loc      |
++-----+------------+------------+
+| 101 | IT         | A Building |
+| 102 | COMP       | B Building |
+| 103 | CIVIL      | C Building |
+| 104 | MECH       | D Building |
+| 105 | ELECTRICAL | E Building |
++-----+------------+------------+
+5 rows in set (0.00 sec)
+
+2> PERSON:
+
+create table person1
+( pid int not null,
+fname varchar(10),
+lname varchar(10),
+city varchar(10),
+pincode int,
+dob date,
+primary key(pid)
+);
+
+3> TEACHER:
+
+create table teacher1
+(tid int,
+pid int,
+salary int,
+designation varchar(10),
+did int,
+primary key(tid),
+foreign key(pid) references person1(pid),
+foreign key(did) references dept1(did)
+);
+
+4> COURSE: 
+
+create table course1
+(cid int,
+c_name varchar(10),
+c_duration varchar(10),
+did int,
+primary key(cid),
+foreign key(did) references dept1(did)
+);
+
+mysql> SELECT * from course1;
+-> #
++-----+--------+------------+------+
+| cid | c_name | c_duration | did  |
++-----+--------+------------+------+
+| 201 | ENGG   | 4 YEAR     |  101 |
+| 202 | MBBS   | 4 YEAR     |  102 |
+| 203 | ITA    | 2 YEAR     |  103 |
+| 204 | MARIN  | 8 YEAR     |  104 |
+| 205 | MBA    | 3 YEAR     |  105 |
++-----+--------+------------+------+
+5 rows in set (0.00 sec)
+
+5> STUDENT:
+
+create table student1
+(sid int,
+marks int,
+pid int,
+class varchar(10),
+cid int,
+primary key(sid),
+foreign key(pid) references person1(pid),
+foreign key(cid) references course1(cid)
+);
+
+mysql> select * from student1;
+-> #
++-----+-------+------+-------+------+
+| sid | marks | pid  | class | cid  |
++-----+-------+------+-------+------+
+| 301 |    99 |    1 | TE    |  201 |
+| 302 |    77 |    2 | BE    |  202 |
+| 303 |    57 |    3 | ME    |  203 |
++-----+-------+------+-------+------+
+3 rows in set (0.00 sec)
+
+6> HISTORY:
+
+create table history
+(hid integer,hdesig varchar(20),
+hsal integer,doh date,
+status varchar(20));
+
+TRIGGER:
+
+********************************************************
+1> BEFORE INSERT:
+
+*********************************************************
+1-create trigger before insert
+
+mysql> select * from person1;
+insert into person1 values(1,'manisha','parde','parali',879065,'1995-10-05');
+insert into person1 values(2,'shivsankar','gore','solapur',413222,'1996-10-09');
+insert into person1 values(3,'supriya','rasal','satara',879555,'1993-12-09');
+insert into person1 values(4,'priyanka','jadhav','sangali',987565,'1997-12-09');
+insert into person1 values(1,'manisha','parde','parali',879065,'1995-10-05');
+
+mysql> #
++-----+------------+--------+---------+---------+------------+
+| pid | fname       | lname  | city    | pincode | dob        |
++-----+-------------+--------+---------+---------+------------+
+|   1 | manisha     | pardhe | parali  |  879065 | 1995-10-05 |
+|   2 | shivshankar | gore   | solapur |  413222 | 1996-10-09 |
+|   3 | supriya     | rasal  | satara  |  413222 | 1993-12-09 |
+|   4 | priyanka    | jadhav | sangli  |   98756 | 1997-12-09 |
+|   7 | shivraj     | gore   | solapur |  413222 | 1995-07-05 |
++-----+------------+--------+---------+---------+------------+
+
+delimiter #
+
+create trigger trigger1 before insert
+on person1
+for each row
+begin
+declare v_id int(2);
+if(NEW.pid < 0) then
+select max(pid) into v_id
+from person1;
+set v_id=v_id+1;
+set NEW.pid=v_id;
+end if;
+end #
+Query OK, 0 rows affected (0.09 sec)
+
+mysql> insert into person1 values(-5,"priya","pardhe","Jalna",112233,"1996-11-5");
+-> #
+Query OK, 1 row affected (0.06 sec)
+
+mysql> select * from person1;
+-> #
++-----+------------+--------+---------+---------+------------+
+| pid | fname      | lname  | city    | pincode | dob        |
++-----+------------+--------+---------+---------+------------+
+|   1 | manisha    | pardhe | parali  |  879065 | 1995-10-05 |
+|   2 | shivshanka | gore   | solapur |  413222 | 1996-10-09 |
+|   3 | supriya    | rasal  | satara  |  413222 | 1993-12-09 |
+|   4 | priyanka   | jadhav | sangli  |   98756 | 1997-12-09 |
+|   7 | shivraj    | gore   | solapur |  413222 | 1995-07-05 |
+|   8 | priya      | pardhe | Jalna   |  112233 | 1996-11-05 |
++-----+------------+--------+---------+---------+------------+
+6 rows in set (0.00 sec)
+
+***************************************************************
+2> BEFORE UPDATE:
+
+****************************************************************
+mysql> select * from teacher1;
+-> #
++-----+------+--------+-------------+------+
+| tid | pid  | salary | designation | did  |
++-----+------+--------+-------------+------+
+| 401 |    4 |  20000 | professor   |  101 |
+| 402 |    7 |  30000 | Asst.profe  |  102 |
+| 403 |    8 |  50000 | HOD         |  103 |
++-----+------+--------+-------------+------+
+3 rows in set (0.00 sec)
+
+delimiter #
+create trigger trig_sal before update
+on teacher1
+for each row
+begin
+declare v_sal int;
+if(NEW.salary<=60000) then
+set NEW.salary=80000;
+end if;
+end#
+
+update teacher1
+set salary=19000
+where tid=401;#
+
+mysql> select * from teacher1;#
++-----+------+--------+-------------+------+
+| tid | pid  | salary | designation | did  |
++-----+------+--------+-------------+------+
+| 401 |    4 |  45000 | professor   |  101 |
+| 402 |    7 |  30000 | Asst.profe  |  102 |
+| 403 |    8 |  50000 | HOD         |  103 |
++-----+------+--------+-------------+------+
+3 rows in set (0.00 sec)

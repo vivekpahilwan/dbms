@@ -1,0 +1,533 @@
+-- Create Tables
+CREATE TABLE Person (
+    driver_id INT PRIMARY KEY,
+    name VARCHAR(100),
+    address VARCHAR(255)
+);
+
+CREATE TABLE Car (
+    license VARCHAR(20) PRIMARY KEY,
+    model VARCHAR(50),
+    year INT
+);
+
+CREATE TABLE Accident (
+    report_number INT PRIMARY KEY,
+    date DATE,
+    location VARCHAR(100)
+);
+
+CREATE TABLE Owns (
+    driver_id INT,
+    license VARCHAR(20),
+    PRIMARY KEY (driver_id, license),
+    FOREIGN KEY (driver_id) REFERENCES Person(driver_id),
+    FOREIGN KEY (license) REFERENCES Car(license)
+);
+
+CREATE TABLE Participated (
+    driver_id INT,
+    license VARCHAR(20),
+    report_number INT,
+    damage_amount DECIMAL(10, 2),
+    PRIMARY KEY (driver_id, license, report_number),
+    FOREIGN KEY (driver_id) REFERENCES Person(driver_id),
+    FOREIGN KEY (license) REFERENCES Car(license),
+    FOREIGN KEY (report_number) REFERENCES Accident(report_number)
+);
+
+-- Insert Data into Tables
+INSERT INTO Person VALUES (1, 'John Smith', '123 Elm St');
+INSERT INTO Person VALUES (2, 'Jane Doe', '456 Oak St');
+INSERT INTO Person VALUES (3, 'Mike Jones', '789 Pine St');
+
+INSERT INTO Car VALUES ('AABB2000', 'Mazda', 2015);
+INSERT INTO Car VALUES ('CCDD3000', 'Toyota', 2018);
+INSERT INTO Car VALUES ('EEFF4000', 'Ford', 2020);
+
+INSERT INTO Owns VALUES (1, 'AABB2000');
+INSERT INTO Owns VALUES (2, 'CCDD3000');
+INSERT INTO Owns VALUES (3, 'EEFF4000');
+
+INSERT INTO Accident VALUES (4001, '1989-05-15', 'New York');
+INSERT INTO Accident VALUES (4002, '1989-07-20', 'Los Angeles');
+INSERT INTO Accident VALUES (4003, '1989-12-01', 'Chicago');
+
+INSERT INTO Participated VALUES (1, 'AABB2000', 4001, 1500.00);
+INSERT INTO Participated VALUES (2, 'CCDD3000', 4002, 2000.00);
+INSERT INTO Participated VALUES (3, 'EEFF4000', 4003, 2500.00);
+
+-- Query 1: Find the total number of people who owned cars involved in accidents in 1989
+SELECT COUNT(DISTINCT Person.name) AS TotalPeople
+FROM Person
+JOIN Participated ON Person.driver_id = Participated.driver_id
+JOIN Accident ON Participated.report_number = Accident.report_number
+WHERE Accident.date BETWEEN '1989-01-01' AND '1989-12-31';
+
+-- Query 2: Find the number of accidents involving cars belonging to “John Smith”
+SELECT COUNT(*) AS AccidentsCount
+FROM Accident
+WHERE EXISTS (
+    SELECT 1
+    FROM Participated
+    JOIN Owns ON Participated.license = Owns.license
+    JOIN Person ON Owns.driver_id = Person.driver_id
+    WHERE Person.name = 'John Smith'
+    AND Accident.report_number = Participated.report_number
+);
+
+-- Query 3: Add a new accident to the database
+INSERT INTO Accident VALUES (4007, '2001-09-01', 'Berkeley');
+INSERT INTO Participated 
+SELECT Owns.driver_id, Car.license, 4007, 3000.00
+FROM Person
+JOIN Owns ON Person.driver_id = Owns.driver_id
+JOIN Car ON Owns.license = Car.license
+WHERE Person.name = 'Mike Jones' AND Car.model = 'Toyota';
+
+-- Query 4: Delete the Mazda belonging to “John Smith”
+DELETE FROM Car
+WHERE license IN (
+    SELECT Owns.license
+    FROM Owns
+    JOIN Person ON Owns.driver_id = Person.driver_id
+    WHERE Person.name = 'John Smith' AND Owns.license IN (
+        SELECT Car.license
+        FROM Car
+        WHERE Car.model = 'Mazda'
+    )
+);
+
+-- Query 5: Update the damage amount for a specific accident
+UPDATE Participated
+SET damage_amount = 3000.00
+WHERE report_number = 4001
+AND license = 'AABB2000';
+
+-- End of File
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+-- Step 1: Create the Tables
+CREATE TABLE employee (
+    employee_name VARCHAR(50),
+    street VARCHAR(100),
+    city VARCHAR(100),
+    PRIMARY KEY (employee_name)
+);
+
+CREATE TABLE works (
+    employee_name VARCHAR(50),
+    company_name VARCHAR(100),
+    salary DECIMAL(10, 2),
+    PRIMARY KEY (employee_name, company_name),
+    FOREIGN KEY (employee_name) REFERENCES employee(employee_name)
+);
+
+CREATE TABLE company (
+    company_name VARCHAR(100),
+    city VARCHAR(100),
+    PRIMARY KEY (company_name)
+);
+
+CREATE TABLE manages (
+    employee_name VARCHAR(50),
+    manager_name VARCHAR(50),
+    PRIMARY KEY (employee_name),
+    FOREIGN KEY (employee_name) REFERENCES employee(employee_name),
+    FOREIGN KEY (manager_name) REFERENCES employee(employee_name)
+);
+
+-- Step 2: Insert Data
+INSERT INTO employee VALUES 
+('Jones', '123 Maple St', 'Oldtown'),
+('Smith', '456 Oak St', 'Springfield'),
+('Brown', '789 Pine St', 'Metropolis'),
+('Miller', '222 Elm St', 'New York'),
+('Taylor', '111 Birch St', 'Los Angeles');
+
+INSERT INTO company VALUES 
+('First Bank Corporation', 'New York'),
+('Small Bank Corporation', 'Los Angeles');
+
+INSERT INTO works VALUES 
+('Jones', 'First Bank Corporation', 80000),
+('Smith', 'First Bank Corporation', 90000),
+('Brown', 'Small Bank Corporation', 70000),
+('Miller', 'First Bank Corporation', 120000),
+('Taylor', 'Small Bank Corporation', 95000);
+
+INSERT INTO manages VALUES 
+('Smith', 'Jones'),
+('Brown', 'Smith'),
+('Miller', 'Taylor');
+
+-- Step 3: Queries
+
+-- (a) Find the names of all employees who work for First Bank Corporation.
+SELECT employee_name
+FROM works
+WHERE company_name = 'First Bank Corporation';
+
+-- (b) Find the names and cities of residence of all employees who work for First Bank Corporation.
+SELECT employee.employee_name, employee.city
+FROM employee
+JOIN works ON employee.employee_name = works.employee_name
+WHERE works.company_name = 'First Bank Corporation';
+
+-- (c) Find the names, street addresses, and cities of residence of all employees who work for First Bank Corporation and earn more than $10,000.
+SELECT employee.employee_name, employee.street, employee.city
+FROM employee
+JOIN works ON employee.employee_name = works.employee_name
+WHERE works.company_name = 'First Bank Corporation' AND works.salary > 10000;
+
+-- (d) Find all employees in the database who live in the same cities as the companies for which they work.
+SELECT employee.employee_name
+FROM employee
+JOIN works ON employee.employee_name = works.employee_name
+JOIN company ON works.company_name = company.company_name
+WHERE employee.city = company.city;
+
+-- (e) Find all employees in the database who live in the same cities and on the same streets as do their managers.
+SELECT employee.employee_name
+FROM employee
+JOIN manages ON employee.employee_name = manages.employee_name
+JOIN employee AS manager ON manages.manager_name = manager.employee_name
+WHERE employee.city = manager.city AND employee.street = manager.street;
+
+-- (f) Find all employees in the database who do not work for First Bank Corporation.
+SELECT employee.employee_name
+FROM employee
+WHERE employee.employee_name NOT IN (
+    SELECT works.employee_name
+    FROM works
+    WHERE works.company_name = 'First Bank Corporation'
+);
+
+-- (g) Find all employees in the database who earn more than each employee of Small Bank Corporation.
+SELECT employee.employee_name
+FROM employee
+JOIN works ON employee.employee_name = works.employee_name
+WHERE works.salary > ALL (
+    SELECT works.salary
+    FROM works
+    WHERE works.company_name = 'Small Bank Corporation'
+);
+
+-- (h) Find all companies located in every city in which Small Bank Corporation is located.
+SELECT company.company_name
+FROM company
+WHERE NOT EXISTS (
+    SELECT company.city
+    FROM company AS small_bank
+    WHERE small_bank.company_name = 'Small Bank Corporation'
+    AND small_bank.city NOT IN (
+        SELECT company.city
+        FROM company
+        WHERE company.company_name = company.company_name
+    )
+);
+
+-- (i) Find all employees who earn more than the average salary of all employees of their company.
+SELECT employee.employee_name
+FROM employee
+JOIN works ON employee.employee_name = works.employee_name
+WHERE works.salary > (
+    SELECT AVG(works.salary)
+    FROM works
+    WHERE works.company_name = works.company_name
+);
+
+-- (j) Find the company that has the most employees.
+SELECT works.company_name
+FROM works
+GROUP BY works.company_name
+ORDER BY COUNT(*) DESC
+LIMIT 1;
+
+-- (k) Find the company that has the smallest payroll.
+SELECT works.company_name
+FROM works
+GROUP BY works.company_name
+ORDER BY SUM(works.salary) ASC
+LIMIT 1;
+
+-- (l) Find those companies whose employees earn a higher salary, on average, than the average salary at First Bank Corporation.
+SELECT company.company_name
+FROM company
+JOIN works ON company.company_name = works.company_name
+GROUP BY company.company_name
+HAVING AVG(works.salary) > (
+    SELECT AVG(works.salary)
+    FROM works
+    WHERE works.company_name = 'First Bank Corporation'
+);
+
+-- Step 4: Verify Results
+SELECT * FROM employee;
+SELECT * FROM works;
+SELECT * FROM company;
+SELECT * FROM manages;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ASSIGNMENT NO:6
+
+AIM: 
+Write a Database Trigger.
+------------------------------------------------------------
+
+DATABASE:
+
+create database trigger3;
+
+USE TRIGGER:
+
+use trigger3;
+
+TABLES:
+
+1> DEPARTMENT:
+
+mysql> SELECT * FROM dept1;
+-> #
++-----+------------+------------+
+| did | d_name     | d_loc      |
++-----+------------+------------+
+| 101 | IT         | A Building |
+| 102 | COMP       | B Building |
+| 103 | CIVIL      | C Building |
+| 104 | MECH       | D Building |
+| 105 | ELECTRICAL | E Building |
++-----+------------+------------+
+5 rows in set (0.00 sec)
+
+2> PERSON:
+
+create table person1
+( pid int not null,
+fname varchar(10),
+lname varchar(10),
+city varchar(10),
+pincode int,
+dob date,
+primary key(pid)
+);
+
+3> TEACHER:
+
+create table teacher1
+(tid int,
+pid int,
+salary int,
+designation varchar(10),
+did int,
+primary key(tid),
+foreign key(pid) references person1(pid),
+foreign key(did) references dept1(did)
+);
+
+4> COURSE: 
+
+create table course1
+(cid int,
+c_name varchar(10),
+c_duration varchar(10),
+did int,
+primary key(cid),
+foreign key(did) references dept1(did)
+);
+
+mysql> SELECT * from course1;
+-> #
++-----+--------+------------+------+
+| cid | c_name | c_duration | did  |
++-----+--------+------------+------+
+| 201 | ENGG   | 4 YEAR     |  101 |
+| 202 | MBBS   | 4 YEAR     |  102 |
+| 203 | ITA    | 2 YEAR     |  103 |
+| 204 | MARIN  | 8 YEAR     |  104 |
+| 205 | MBA    | 3 YEAR     |  105 |
++-----+--------+------------+------+
+5 rows in set (0.00 sec)
+
+5> STUDENT:
+
+create table student1
+(sid int,
+marks int,
+pid int,
+class varchar(10),
+cid int,
+primary key(sid),
+foreign key(pid) references person1(pid),
+foreign key(cid) references course1(cid)
+);
+
+mysql> select * from student1;
+-> #
++-----+-------+------+-------+------+
+| sid | marks | pid  | class | cid  |
++-----+-------+------+-------+------+
+| 301 |    99 |    1 | TE    |  201 |
+| 302 |    77 |    2 | BE    |  202 |
+| 303 |    57 |    3 | ME    |  203 |
++-----+-------+------+-------+------+
+3 rows in set (0.00 sec)
+
+6> HISTORY:
+
+create table history
+(hid integer,hdesig varchar(20),
+hsal integer,doh date,
+status varchar(20));
+
+TRIGGER:
+
+********************************************************
+1> BEFORE INSERT:
+
+*********************************************************
+1-create trigger before insert
+
+mysql> select * from person1;
+insert into person1 values(1,'manisha','parde','parali',879065,'1995-10-05');
+insert into person1 values(2,'shivsankar','gore','solapur',413222,'1996-10-09');
+insert into person1 values(3,'supriya','rasal','satara',879555,'1993-12-09');
+insert into person1 values(4,'priyanka','jadhav','sangali',987565,'1997-12-09');
+insert into person1 values(1,'manisha','parde','parali',879065,'1995-10-05');
+
+mysql> #
++-----+------------+--------+---------+---------+------------+
+| pid | fname       | lname  | city    | pincode | dob        |
++-----+-------------+--------+---------+---------+------------+
+|   1 | manisha     | pardhe | parali  |  879065 | 1995-10-05 |
+|   2 | shivshankar | gore   | solapur |  413222 | 1996-10-09 |
+|   3 | supriya     | rasal  | satara  |  413222 | 1993-12-09 |
+|   4 | priyanka    | jadhav | sangli  |   98756 | 1997-12-09 |
+|   7 | shivraj     | gore   | solapur |  413222 | 1995-07-05 |
++-----+------------+--------+---------+---------+------------+
+
+delimiter #
+
+create trigger trigger1 before insert
+on person1
+for each row
+begin
+declare v_id int(2);
+if(NEW.pid < 0) then
+select max(pid) into v_id
+from person1;
+set v_id=v_id+1;
+set NEW.pid=v_id;
+end if;
+end #
+Query OK, 0 rows affected (0.09 sec)
+
+mysql> insert into person1 values(-5,"priya","pardhe","Jalna",112233,"1996-11-5");
+-> #
+Query OK, 1 row affected (0.06 sec)
+
+mysql> select * from person1;
+-> #
++-----+------------+--------+---------+---------+------------+
+| pid | fname      | lname  | city    | pincode | dob        |
++-----+------------+--------+---------+---------+------------+
+|   1 | manisha    | pardhe | parali  |  879065 | 1995-10-05 |
+|   2 | shivshanka | gore   | solapur |  413222 | 1996-10-09 |
+|   3 | supriya    | rasal  | satara  |  413222 | 1993-12-09 |
+|   4 | priyanka   | jadhav | sangli  |   98756 | 1997-12-09 |
+|   7 | shivraj    | gore   | solapur |  413222 | 1995-07-05 |
+|   8 | priya      | pardhe | Jalna   |  112233 | 1996-11-05 |
++-----+------------+--------+---------+---------+------------+
+6 rows in set (0.00 sec)
+
+***************************************************************
+2> BEFORE UPDATE:
+
+****************************************************************
+mysql> select * from teacher1;
+-> #
++-----+------+--------+-------------+------+
+| tid | pid  | salary | designation | did  |
++-----+------+--------+-------------+------+
+| 401 |    4 |  20000 | professor   |  101 |
+| 402 |    7 |  30000 | Asst.profe  |  102 |
+| 403 |    8 |  50000 | HOD         |  103 |
++-----+------+--------+-------------+------+
+3 rows in set (0.00 sec)
+
+delimiter #
+create trigger trig_sal before update
+on teacher1
+for each row
+begin
+declare v_sal int;
+if(NEW.salary<=60000) then
+set NEW.salary=80000;
+end if;
+end#
+
+update teacher1
+set salary=19000
+where tid=401;#
+
+mysql> select * from teacher1;#
++-----+------+--------+-------------+------+
+| tid | pid  | salary | designation | did  |
++-----+------+--------+-------------+------+
+| 401 |    4 |  45000 | professor   |  101 |
+| 402 |    7 |  30000 | Asst.profe  |  102 |
+| 403 |    8 |  50000 | HOD         |  103 |
++-----+------+--------+-------------+------+
+3 rows in set (0.00 sec)

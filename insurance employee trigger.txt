@@ -310,6 +310,148 @@ SELECT * FROM manages;
 
 
 
+ASSIGNMENT NO: 5
+
+AIM: 
+Calculate grade of minimum 10 student using cursor.
+------------------------------------------------------------
+
+1> DATABASE:    
+
+create database swati;
+
+2> USE DATABASE:
+
+use swati;
+
+3> TABLE:
+
+create table student(sid integer auto_increment, m1 integer, m2 integer, m3 integer, primary key(sid));
+
+4> INSERT:
+
+insert into student values(NULL, 40, 50, 60);
+insert into student values(NULL, 80, 60, 60);
+insert into student values(NULL, 60, 70, 70);
+insert into student values(NULL, 40, 90, 40);
+insert into student values(NULL, 20, 20, 30);
+insert into student values(NULL, 80, 50, 90);
+insert into student values(NULL, 50, 70, 80);
+insert into student values(NULL, 45, 66, 55);
+insert into student values(NULL, 45, 45, 45);
+insert into student values(NULL, 50, 50, 50);
+
+select * from student;
+
++-----+------+------+------+
+| sid | m1   | m2   | m3   |
++-----+------+------+------+
+|   1 |   40 |   50 |   60 |
+|   2 |   80 |   60 |   60 |
+|   3 |   60 |   70 |   70 |
+|   4 |   40 |   90 |   40 |
+|   5 |   48 |   90 |   90 |
+|   6 |   20 |   20 |   30 |
+|   7 |   80 |   50 |   90 |
+|   8 |   50 |   70 |   80 |
+|   9 |   45 |   66 |   55 |
+|  10 |   45 |   45 |   45 |
++-----+------+------+------+
+
+5> CREATE PROCEDURE:
+
+create procedure displayall()
+begin
+    declare v_sid, v_sub1, v_sub2, v_sub3 int;
+    declare total int default 0;
+    declare v_finished int default 0;
+    declare per decimal(10,2);
+    declare std_cur cursor for
+        (select sid, m1, m2, m3 from student);
+    declare continue handler for not found set v_finished = 1;
+    set per = 0;
+    open std_cur;
+    label1: loop
+        fetch std_cur into v_sid, v_sub1, v_sub2, v_sub3;
+        if v_finished = 1 then
+            leave label1;
+        end if;
+        set total = (v_sub1 + v_sub2 + v_sub3);
+        set per = total / 3;
+        select concat('marks --> ', v_sub1, ', ', v_sub2, ', ', v_sub3) as "Subject wise Marks";
+        select concat('Total marks of student: ', total) as "Total Marks";
+        select concat('Percentage of student: ', per) as "Percentage";
+        if (per >= 66) then
+            select 'Distinction' as Class;
+        elseif (per < 66 and per >= 60) then
+            select 'First Class' as Class;
+        elseif (per < 60 and per >= 55) then
+            select 'Higher Second Class' as Class;
+        elseif (per < 55 and per >= 50) then
+            select 'Second Class' as Class;
+        elseif (per < 50 and per >= 40) then
+            select 'Pass Class' as Class;
+        else
+            select 'Failed' as Class;
+        end if;
+    end loop label1;
+    close std_cur;
+end;
+
+6> OUTPUT:
+
+call displayall();
+
++--------------------+
+| Subject wise Marks |
++--------------------+
+| marks --> 40, 50, 60 |
++--------------------+
+1 row in set (0.06 sec)
+
++-----------------------------+
+| Total Marks                |
++-----------------------------+
+| Total marks of student: 150 |
++-----------------------------+
+
++-----------------------------+
+| Percentage                 |
++-----------------------------+
+| Percentage of student: 50.00 |
++-----------------------------+
+
++---------------------+
+| Class               |
++---------------------+
+| Second Class        |
++---------------------+
+
+... [OUTPUT CONTINUES FOR EACH STUDENT]
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

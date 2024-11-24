@@ -60,97 +60,97 @@ FROM works
 WHERE company_name = 'First Bank Corporation';
 
 -- (b) Find the names and cities of residence of all employees who work for First Bank Corporation.
-SELECT e.employee_name, e.city
-FROM employee e
-JOIN works w ON e.employee_name = w.employee_name
-WHERE w.company_name = 'First Bank Corporation';
+SELECT employee.employee_name, employee.city
+FROM employee
+JOIN works ON employee.employee_name = works.employee_name
+WHERE works.company_name = 'First Bank Corporation';
 
 -- (c) Find the names, street addresses, and cities of residence of all employees who work for First Bank Corporation and earn more than $10,000.
-SELECT e.employee_name, e.street, e.city
-FROM employee e
-JOIN works w ON e.employee_name = w.employee_name
-WHERE w.company_name = 'First Bank Corporation' AND w.salary > 10000;
+SELECT employee.employee_name, employee.street, employee.city
+FROM employee
+JOIN works ON employee.employee_name = works.employee_name
+WHERE works.company_name = 'First Bank Corporation' AND works.salary > 10000;
 
 -- (d) Find all employees in the database who live in the same cities as the companies for which they work.
-SELECT e.employee_name
-FROM employee e
-JOIN works w ON e.employee_name = w.employee_name
-JOIN company c ON w.company_name = c.company_name
-WHERE e.city = c.city;
+SELECT employee.employee_name
+FROM employee
+JOIN works ON employee.employee_name = works.employee_name
+JOIN company ON works.company_name = company.company_name
+WHERE employee.city = company.city;
 
 -- (e) Find all employees in the database who live in the same cities and on the same streets as do their managers.
-SELECT e.employee_name
-FROM employee e
-JOIN manages m ON e.employee_name = m.employee_name
-JOIN employee mgr ON m.manager_name = mgr.employee_name
-WHERE e.city = mgr.city AND e.street = mgr.street;
+SELECT employee.employee_name
+FROM employee
+JOIN manages ON employee.employee_name = manages.employee_name
+JOIN employee AS manager ON manages.manager_name = manager.employee_name
+WHERE employee.city = manager.city AND employee.street = manager.street;
 
 -- (f) Find all employees in the database who do not work for First Bank Corporation.
-SELECT e.employee_name
-FROM employee e
-WHERE e.employee_name NOT IN (
-    SELECT employee_name
+SELECT employee.employee_name
+FROM employee
+WHERE employee.employee_name NOT IN (
+    SELECT works.employee_name
     FROM works
-    WHERE company_name = 'First Bank Corporation'
+    WHERE works.company_name = 'First Bank Corporation'
 );
 
 -- (g) Find all employees in the database who earn more than each employee of Small Bank Corporation.
-SELECT e.employee_name
-FROM employee e
-JOIN works w ON e.employee_name = w.employee_name
-WHERE w.salary > ALL (
-    SELECT w2.salary
-    FROM works w2
-    WHERE w2.company_name = 'Small Bank Corporation'
+SELECT employee.employee_name
+FROM employee
+JOIN works ON employee.employee_name = works.employee_name
+WHERE works.salary > ALL (
+    SELECT works.salary
+    FROM works
+    WHERE works.company_name = 'Small Bank Corporation'
 );
 
 -- (h) Find all companies located in every city in which Small Bank Corporation is located.
-SELECT c.company_name
-FROM company c
+SELECT company.company_name
+FROM company
 WHERE NOT EXISTS (
-    SELECT city
-    FROM company sc
-    WHERE sc.company_name = 'Small Bank Corporation'
-    AND sc.city NOT IN (
-        SELECT city
-        FROM company cc
-        WHERE cc.company_name = c.company_name
+    SELECT company.city
+    FROM company AS small_bank
+    WHERE small_bank.company_name = 'Small Bank Corporation'
+    AND small_bank.city NOT IN (
+        SELECT company.city
+        FROM company
+        WHERE company.company_name = company.company_name
     )
 );
 
 -- (i) Find all employees who earn more than the average salary of all employees of their company.
-SELECT e.employee_name
-FROM employee e
-JOIN works w ON e.employee_name = w.employee_name
-WHERE w.salary > (
-    SELECT AVG(w2.salary)
-    FROM works w2
-    WHERE w2.company_name = w.company_name
+SELECT employee.employee_name
+FROM employee
+JOIN works ON employee.employee_name = works.employee_name
+WHERE works.salary > (
+    SELECT AVG(works.salary)
+    FROM works
+    WHERE works.company_name = works.company_name
 );
 
 -- (j) Find the company that has the most employees.
-SELECT w.company_name
-FROM works w
-GROUP BY w.company_name
+SELECT works.company_name
+FROM works
+GROUP BY works.company_name
 ORDER BY COUNT(*) DESC
 LIMIT 1;
 
 -- (k) Find the company that has the smallest payroll.
-SELECT w.company_name
-FROM works w
-GROUP BY w.company_name
-ORDER BY SUM(w.salary) ASC
+SELECT works.company_name
+FROM works
+GROUP BY works.company_name
+ORDER BY SUM(works.salary) ASC
 LIMIT 1;
 
 -- (l) Find those companies whose employees earn a higher salary, on average, than the average salary at First Bank Corporation.
-SELECT c.company_name
-FROM company c
-JOIN works w ON c.company_name = w.company_name
-GROUP BY c.company_name
-HAVING AVG(w.salary) > (
-    SELECT AVG(w2.salary)
-    FROM works w2
-    WHERE w2.company_name = 'First Bank Corporation'
+SELECT company.company_name
+FROM company
+JOIN works ON company.company_name = works.company_name
+GROUP BY company.company_name
+HAVING AVG(works.salary) > (
+    SELECT AVG(works.salary)
+    FROM works
+    WHERE works.company_name = 'First Bank Corporation'
 );
 
 -- Step 4: Verify Results

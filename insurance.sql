@@ -58,43 +58,43 @@ INSERT INTO Participated VALUES (2, 'CCDD3000', 4002, 2000.00);
 INSERT INTO Participated VALUES (3, 'EEFF4000', 4003, 2500.00);
 
 -- Query 1: Find the total number of people who owned cars involved in accidents in 1989
-SELECT COUNT(DISTINCT p.name) AS TotalPeople
-FROM Person p
-JOIN Participated pr ON p.driver_id = pr.driver_id
-JOIN Accident a ON pr.report_number = a.report_number
-WHERE a.date BETWEEN '1989-01-01' AND '1989-12-31';
+SELECT COUNT(DISTINCT Person.name) AS TotalPeople
+FROM Person
+JOIN Participated ON Person.driver_id = Participated.driver_id
+JOIN Accident ON Participated.report_number = Accident.report_number
+WHERE Accident.date BETWEEN '1989-01-01' AND '1989-12-31';
 
 -- Query 2: Find the number of accidents involving cars belonging to “John Smith”
 SELECT COUNT(*) AS AccidentsCount
-FROM Accident a
+FROM Accident
 WHERE EXISTS (
     SELECT 1
-    FROM Participated pr
-    JOIN Owns o ON pr.license = o.license
-    JOIN Person p ON o.driver_id = p.driver_id
-    WHERE p.name = 'John Smith'
-    AND a.report_number = pr.report_number
+    FROM Participated
+    JOIN Owns ON Participated.license = Owns.license
+    JOIN Person ON Owns.driver_id = Person.driver_id
+    WHERE Person.name = 'John Smith'
+    AND Accident.report_number = Participated.report_number
 );
 
 -- Query 3: Add a new accident to the database
 INSERT INTO Accident VALUES (4007, '2001-09-01', 'Berkeley');
 INSERT INTO Participated 
-SELECT o.driver_id, c.license, 4007, 3000.00
-FROM Person p
-JOIN Owns o ON p.driver_id = o.driver_id
-JOIN Car c ON o.license = c.license
-WHERE p.name = 'Mike Jones' AND c.model = 'Toyota';
+SELECT Owns.driver_id, Car.license, 4007, 3000.00
+FROM Person
+JOIN Owns ON Person.driver_id = Owns.driver_id
+JOIN Car ON Owns.license = Car.license
+WHERE Person.name = 'Mike Jones' AND Car.model = 'Toyota';
 
 -- Query 4: Delete the Mazda belonging to “John Smith”
 DELETE FROM Car
 WHERE license IN (
-    SELECT o.license
-    FROM Owns o
-    JOIN Person p ON o.driver_id = p.driver_id
-    WHERE p.name = 'John Smith' AND o.license IN (
-        SELECT license
+    SELECT Owns.license
+    FROM Owns
+    JOIN Person ON Owns.driver_id = Person.driver_id
+    WHERE Person.name = 'John Smith' AND Owns.license IN (
+        SELECT Car.license
         FROM Car
-        WHERE model = 'Mazda'
+        WHERE Car.model = 'Mazda'
     )
 );
 
